@@ -19,7 +19,7 @@ public class MortarShot {
         this.dx = dx;
         this.dy = dy;
 
-        this.image = new Image("/images/mortarshot.tiff");
+        this.image = new Image("/images/mortarshot.png");
         this.imageView = new ImageView(image);
     }
 

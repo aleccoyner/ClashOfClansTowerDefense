@@ -19,7 +19,7 @@ public class CannonBall {
         this.dx = dx;
         this.dy = dy;
 
-        this.image = new Image("/images/cannonball.tiff");
+        this.image = new Image("/images/cannonball.png");
         this.imageView = new ImageView(image);
     }
 
