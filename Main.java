@@ -440,7 +440,10 @@ public class Main extends Application {
                     }
                 }
                 for (int i = 0; i < clockTowerArray.size(); i++) {
-
+                    if (clockTowerTimer % 360 == 0) {
+                        player.setMoney(player.getMoney() + 100);
+                        displayMoney.setText("$" + player.getMoney());
+                    }
                 }
                 for (int i = 0; i < infernoTowerArray.size(); i++) {
                     for (int j = 0; j < goblinArray.size(); j++) {
@@ -576,7 +579,7 @@ public class Main extends Application {
             goblinArray.add(goblin);
             barbarianArray.add(barb);
             root.getChildren().addAll(goblin.getImageView(), barb.getImageView());
-        } else if (round >= 5 && round < 15) {
+        } else {
             GoblinEnemy goblin = new GoblinEnemy();
             BarbarianEnemy barb = new BarbarianEnemy();
             GolemEnemy golem = new GolemEnemy();
@@ -584,8 +587,6 @@ public class Main extends Application {
             barbarianArray.add(barb);
             golemArray.add(golem);
             root.getChildren().addAll(goblin.getImageView(), barb.getImageView(), golem.getImageView());
-        } else {
-            //Boss
         }
     }
 
