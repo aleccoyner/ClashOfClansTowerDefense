@@ -1,3 +1,5 @@
+import ammo.*;
+import com.sun.javafx.geom.AreaOp;
 import enemies.BarbarianEnemy;
 import enemies.GoblinEnemy;
 import enemies.GolemEnemy;
@@ -63,7 +65,11 @@ public class Main extends Application {
     private ArrayList<GoblinEnemy> goblinArray = new ArrayList<>(1);
     private ArrayList<GolemEnemy> golemArray = new ArrayList<>(1);
 
-    private ArrayList<Bullet> bulletArray = new ArrayList<>(5);
+    private ArrayList<Arrow> arrowArray = new ArrayList<>(5);
+    private ArrayList<CannonBall> cannonBallArray = new ArrayList<>(5);
+    private ArrayList<Fireball> fireballArray = new ArrayList<>(5);
+    private ArrayList<PurpleFireball> purpleFireballArray = new ArrayList<>(5);
+    private ArrayList<MortarShot> mortarShotArray = new ArrayList<>(5);
 
 
     public void start(Stage primaryStage) {
@@ -206,122 +212,6 @@ public class Main extends Application {
         });
     }
 
-    public void map(Stage primaryStage) {
-        root = new BorderPane();
-        root.setBackground(mapImage());
-        scene = new Scene(root, 1280, 680);
-        primaryStage.setScene(scene);
-        primaryStage.show();
-
-        monument.setHealth(monument.getHealth() - player.getMonumentMultiplier());
-        displayMonumentHealth.setText("♥" + monument.getHealth());
-        displayMonumentHealth.setFont(Font.font("Times New Roman", FontWeight.BOLD, 17));
-        monument.getImageView().setX(1170);
-        monument.getImageView().setY(510);
-        displayMonumentHealth.setX(1195);
-        displayMonumentHealth.setY(625);
-
-        root.setOnMouseMoved(new EventHandler<MouseEvent>() {
-            @Override public void handle(MouseEvent event) {
-                int mouseX = ((int) event.getX());
-                int mouseY = ((int) event.getY());
-                PixelReader placePixels = path.getPixelReader();
-                try {
-                    if ((1280 - mouseX) < 1280 && (680 - mouseY) < 680) {
-                        if (!placePixels.getColor(mouseX, mouseY).equals(Color.BLACK)) {
-                            if (!placePixels.getColor(mouseX + 5, mouseY + 5).equals(Color.BLACK)) {
-                                if (!placePixels.getColor(mouseX, mouseY + 5).equals(Color.BLACK)) {
-                                    if (!placePixels.getColor(mouseX
-                                            + 5, mouseY).equals(Color.BLACK)) {
-                                        root.setCursor(cursor1);
-                                    }
-                                }
-                            }
-                        } else {
-                            root.setCursor(cursor2);
-                        }
-                    }
-                } catch (IndexOutOfBoundsException e) {
-                    System.out.println("Out of bounds");
-                }
-            }
-        });
-        root.getChildren().addAll(monument.getImageView(), displayMonumentHealth);
-
-        buyTowerMenu(primaryStage);
-        gameLoop(primaryStage);
-    }
-
-    public void gameLoop(Stage primaryStage) {
-        AnimationTimer loop = new AnimationTimer() {
-            int goblinTimer = 45;
-            int barbTimer = 75;
-            int golemTimer = 105;
-
-            int archerTimer = 60;
-            @Override
-            public void handle(long l) {
-                goblinArray.forEach(GoblinEnemy::move);
-                goblinArray.forEach(GoblinEnemy::updateUI);
-
-                barbarianArray.forEach(BarbarianEnemy::move);
-                barbarianArray.forEach(BarbarianEnemy::updateUI);
-
-                golemArray.forEach(GolemEnemy::move);
-                golemArray.forEach(GolemEnemy::updateUI);
-
-                bulletArray.forEach(Bullet::move);
-                bulletArray.forEach(Bullet::updateUI);
-
-                for (GoblinEnemy goblin : goblinArray) {
-                    if (goblin.getX() >= 1110) {
-                        if (goblinTimer % goblin.getAttackSpeed() == 0) {
-                            monument.setHealth(monument.getHealth() - goblin.getAttack());
-                            displayMonumentHealth.setText("♥" + monument.getHealth());
-                        }
-                        goblinTimer++;
-                    }
-                }
-                for (BarbarianEnemy barb : barbarianArray) {
-                    if (barb.getX() >= 1110) {
-                        if (barbTimer % barb.getAttackSpeed() == 0) {
-                            monument.setHealth(monument.getHealth() - barb.getAttack());
-                            displayMonumentHealth.setText("♥" + monument.getHealth());
-                        }
-                        barbTimer++;
-                    }
-                }
-                for (GolemEnemy golem : golemArray) {
-                    if (golem.getX() >= 1110) {
-                        if (golemTimer % golem.getAttackSpeed() == 0) {
-                            monument.setHealth(monument.getHealth() - golem.getAttack());
-                            displayMonumentHealth.setText("♥" + monument.getHealth());
-                        }
-                        golemTimer++;
-                    }
-                }
-
-                for (int i = 0; i < archerArray.size(); i++) {
-                    for (int j = 0; i < goblinArray.size(); i++) {
-                        if (Math.abs(archerArray.get(i).getX() - goblinArray.get(i).getX()) < 250
-                                && Math.abs(archerArray.get(i).getY() - goblinArray.get(i).getY()) < 250) {
-                            if (archerTimer % 60 == 0) {
-                                archerAttack();
-                            }
-                            archerTimer++;
-                        }
-                    }
-                }
-
-                if (monument.getHealth() <= 0) {
-                    this.stop();
-                    endGame(primaryStage);
-                }
-            }
-        };
-        loop.start();
-    }
-
     public void buyTowerMenu(Stage primaryStage) {
         //UI and Buy Menu
         VBox uiBox = new VBox();
@@ -339,8 +229,9 @@ public class Main extends Application {
         uiBox.getChildren().addAll(displayRound, displayMoney, startRoundButton);
 
         startRoundButton.setOnAction(e -> {
+            startRound();
             if (goblinArray.size() == 0 && barbarianArray.size() == 0 && golemArray.size() == 0) {
-                startRound();
+
             }
         });
 
@@ -412,6 +303,270 @@ public class Main extends Application {
         });
     }
 
+    public void map(Stage primaryStage) {
+        root = new BorderPane();
+        root.setBackground(mapImage());
+        scene = new Scene(root, 1280, 680);
+        primaryStage.setScene(scene);
+        primaryStage.show();
+
+        monument.setHealth(monument.getHealth() - player.getMonumentMultiplier());
+        displayMonumentHealth.setText("♥" + monument.getHealth());
+        displayMonumentHealth.setFont(Font.font("Times New Roman", FontWeight.BOLD, 17));
+        monument.getImageView().setX(1170);
+        monument.getImageView().setY(510);
+        displayMonumentHealth.setX(1195);
+        displayMonumentHealth.setY(625);
+
+        root.setOnMouseMoved(new EventHandler<MouseEvent>() {
+            @Override public void handle(MouseEvent event) {
+                int mouseX = ((int) event.getX());
+                int mouseY = ((int) event.getY());
+                PixelReader placePixels = path.getPixelReader();
+                try {
+                    if ((1280 - mouseX) < 1280 && (680 - mouseY) < 680) {
+                        if (!placePixels.getColor(mouseX, mouseY).equals(Color.BLACK)) {
+                            if (!placePixels.getColor(mouseX + 5, mouseY + 5).equals(Color.BLACK)) {
+                                if (!placePixels.getColor(mouseX, mouseY + 5).equals(Color.BLACK)) {
+                                    if (!placePixels.getColor(mouseX
+                                            + 5, mouseY).equals(Color.BLACK)) {
+                                        root.setCursor(cursor1);
+                                    }
+                                }
+                            }
+                        } else {
+                            root.setCursor(cursor2);
+                        }
+                    }
+                } catch (IndexOutOfBoundsException e) {
+                    System.out.println("Out of bounds");
+                }
+            }
+        });
+        root.getChildren().addAll(monument.getImageView(), displayMonumentHealth);
+
+        buyTowerMenu(primaryStage);
+        gameLoop(primaryStage);
+    }
+
+    public void gameLoop(Stage primaryStage) {
+        AnimationTimer loop = new AnimationTimer() {
+            int goblinTimer = 45;
+            int barbTimer = 75;
+            int golemTimer = 105;
+
+            int archerTimer = 120;
+            int cannonTimer = 180;
+            int clockTowerTimer = 360;
+            int infernoTowerTimer = 60;
+            int mortarTimer = 240;
+            int wizardTowerTimer = 75;
+            @Override
+            public void handle(long l) {
+                goblinArray.forEach(GoblinEnemy::move);
+                goblinArray.forEach(GoblinEnemy::updateUI);
+                barbarianArray.forEach(BarbarianEnemy::move);
+                barbarianArray.forEach(BarbarianEnemy::updateUI);
+                golemArray.forEach(GolemEnemy::move);
+                golemArray.forEach(GolemEnemy::updateUI);
+
+                arrowArray.forEach(Arrow::move);
+                arrowArray.forEach(Arrow::updateUI);
+                cannonBallArray.forEach(CannonBall::move);
+                cannonBallArray.forEach(CannonBall::updateUI);
+                fireballArray.forEach(Fireball::move);
+                fireballArray.forEach(Fireball::updateUI);
+                purpleFireballArray.forEach(PurpleFireball::move);
+                purpleFireballArray.forEach(PurpleFireball::updateUI);
+                mortarShotArray.forEach(MortarShot::move);
+                mortarShotArray.forEach(MortarShot::updateUI);
+
+                for (int i = 0; i < archerArray.size(); i++) {
+                    for (int j = 0; j < goblinArray.size(); j++) {
+                        if (Math.abs(archerArray.get(i).getX() - goblinArray.get(j).getX()) < 250
+                                && Math.abs(archerArray.get(i).getY() - goblinArray.get(j).getY()) < 250) {
+                            if (archerTimer % 120 == 0) {
+                                archerGoblinAttack(i, j);
+                            }
+                            archerTimer++;
+                        }
+                    }
+                    for (int j = 0; j < barbarianArray.size(); j++) {
+                        if (Math.abs(archerArray.get(i).getX() - barbarianArray.get(j).getX()) < 250
+                                && Math.abs(archerArray.get(i).getY() - barbarianArray.get(j).getY()) < 250) {
+                            if (archerTimer % 120 == 0) {
+                                archerBarbAttack(i, j);
+                            }
+                            archerTimer++;
+                        }
+                    }
+                    for (int j = 0; j < golemArray.size(); j++) {
+                        if (Math.abs(archerArray.get(i).getX() - golemArray.get(j).getX()) < 250
+                                && Math.abs(archerArray.get(i).getY() - golemArray.get(j).getY()) < 250) {
+                            if (archerTimer % 120 == 0) {
+                                archerGolemAttack(i, j);
+                            }
+                            archerTimer++;
+                        }
+                    }
+                }
+                for (int i = 0; i < cannonArray.size(); i++) {
+                    for (int j = 0; j < goblinArray.size(); j++) {
+                        if (Math.abs(cannonArray.get(i).getX() - goblinArray.get(j).getX()) < 250
+                                && Math.abs(cannonArray.get(i).getY() - goblinArray.get(j).getY()) < 250) {
+                            if (cannonTimer % 180 == 0) {
+                                cannonGoblinAttack(i, j);
+                            }
+                            cannonTimer++;
+                        }
+                    }
+                    for (int j = 0; j < barbarianArray.size(); j++) {
+                        if (Math.abs(cannonArray.get(i).getX() - barbarianArray.get(j).getX()) < 250
+                                && Math.abs(cannonArray.get(i).getY() - barbarianArray.get(j).getY()) < 250) {
+                            if (cannonTimer % 180 == 0) {
+                                cannonBarbAttack(i, j);
+                            }
+                            cannonTimer++;
+                        }
+                    }
+                    for (int j = 0; j < golemArray.size(); j++) {
+                        if (Math.abs(cannonArray.get(i).getX() - golemArray.get(j).getX()) < 250
+                                && Math.abs(cannonArray.get(i).getY() - golemArray.get(j).getY()) < 250) {
+                            if (cannonTimer % 180 == 0) {
+                                cannonGolemAttack(i, j);
+                            }
+                            cannonTimer++;
+                        }
+                    }
+                }
+                for (int i = 0; i < clockTowerArray.size(); i++) {
+
+                }
+                for (int i = 0; i < infernoTowerArray.size(); i++) {
+                    for (int j = 0; j < goblinArray.size(); j++) {
+                        if (Math.abs(infernoTowerArray.get(i).getX() - goblinArray.get(j).getX()) < 250
+                                && Math.abs(infernoTowerArray.get(i).getY() - goblinArray.get(j).getY()) < 250) {
+                            if (infernoTowerTimer % 60 == 0) {
+                                infernoTowerGoblinAttack(i, j);
+                            }
+                            infernoTowerTimer++;
+                        }
+                    }
+                    for (int j = 0; j < barbarianArray.size(); j++) {
+                        if (Math.abs(infernoTowerArray.get(i).getX() - barbarianArray.get(j).getX()) < 250
+                                && Math.abs(infernoTowerArray.get(i).getY() - barbarianArray.get(j).getY()) < 250) {
+                            if (infernoTowerTimer % 60 == 0) {
+                                infernoTowerBarbAttack(i, j);
+                            }
+                            infernoTowerTimer++;
+                        }
+                    }
+                    for (int j = 0; j < golemArray.size(); j++) {
+                        if (Math.abs(infernoTowerArray.get(i).getX() - golemArray.get(j).getX()) < 250
+                                && Math.abs(infernoTowerArray.get(i).getY() - golemArray.get(j).getY()) < 250) {
+                            if (infernoTowerTimer % 60 == 0) {
+                                infernoTowerGolemAttack(i, j);
+                            }
+                            infernoTowerTimer++;
+                        }
+                    }
+                }
+                for (int i = 0; i < mortarArray.size(); i++) {
+                    for (int j = 0; j < goblinArray.size(); j++) {
+                        if (Math.abs(mortarArray.get(i).getX() - goblinArray.get(j).getX()) < 250
+                                && Math.abs(mortarArray.get(i).getY() - goblinArray.get(j).getY()) < 250) {
+                            if (mortarTimer % 240 == 0) {
+                                mortarGoblinAttack(i, j);
+                            }
+                            mortarTimer++;
+                        }
+                    }
+                    for (int j = 0; j < barbarianArray.size(); j++) {
+                        if (Math.abs(mortarArray.get(i).getX() - barbarianArray.get(j).getX()) < 250
+                                && Math.abs(mortarArray.get(i).getY() - barbarianArray.get(j).getY()) < 250) {
+                            if (mortarTimer % 240 == 0) {
+                                mortarBarbAttack(i, j);
+                            }
+                            mortarTimer++;
+                        }
+                    }
+                    for (int j = 0; j < golemArray.size(); j++) {
+                        if (Math.abs(mortarArray.get(i).getX() - golemArray.get(j).getX()) < 250
+                                && Math.abs(mortarArray.get(i).getY() - golemArray.get(j).getY()) < 250) {
+                            if (mortarTimer % 240 == 0) {
+                                mortarGolemAttack(i, j);
+                            }
+                            mortarTimer++;
+                        }
+                    }
+                }
+                for (int i = 0; i < wizardTowerArray.size(); i++) {
+                    for (int j = 0; j < goblinArray.size(); j++) {
+                        if (Math.abs(wizardTowerArray.get(i).getX() - goblinArray.get(j).getX()) < 250
+                                && Math.abs(wizardTowerArray.get(i).getY() - goblinArray.get(j).getY()) < 250) {
+                            if (wizardTowerTimer % 75 == 0) {
+                                wizardTowerGoblinAttack(i, j);
+                            }
+                            wizardTowerTimer++;
+                        }
+                    }
+                    for (int j = 0; j < barbarianArray.size(); j++) {
+                        if (Math.abs(wizardTowerArray.get(i).getX() - barbarianArray.get(j).getX()) < 250
+                                && Math.abs(wizardTowerArray.get(i).getY() - barbarianArray.get(j).getY()) < 250) {
+                            if (wizardTowerTimer % 75 == 0) {
+                                wizardTowerBarbAttack(i, j);
+                            }
+                            wizardTowerTimer++;
+                        }
+                    }
+                    for (int j = 0; j < golemArray.size(); j++) {
+                        if (Math.abs(wizardTowerArray.get(i).getX() - golemArray.get(j).getX()) < 250
+                                && Math.abs(wizardTowerArray.get(i).getY() - golemArray.get(j).getY()) < 250) {
+                            if (wizardTowerTimer % 75 == 0) {
+                                wizardTowerGolemAttack(i, j);
+                            }
+                            wizardTowerTimer++;
+                        }
+                    }
+                }
+
+                for (GoblinEnemy goblin : goblinArray) {
+                    if (goblin.getX() >= 1110) {
+                        if (goblinTimer % goblin.getAttackSpeed() == 0) {
+                            monument.setHealth(monument.getHealth() - goblin.getAttack());
+                            displayMonumentHealth.setText("♥" + monument.getHealth());
+                        }
+                        goblinTimer++;
+                    }
+                }
+                for (BarbarianEnemy barb : barbarianArray) {
+                    if (barb.getX() >= 1110) {
+                        if (barbTimer % barb.getAttackSpeed() == 0) {
+                            monument.setHealth(monument.getHealth() - barb.getAttack());
+                            displayMonumentHealth.setText("♥" + monument.getHealth());
+                        }
+                        barbTimer++;
+                    }
+                }
+                for (GolemEnemy golem : golemArray) {
+                    if (golem.getX() >= 1110) {
+                        if (golemTimer % golem.getAttackSpeed() == 0) {
+                            monument.setHealth(monument.getHealth() - golem.getAttack());
+                            displayMonumentHealth.setText("♥" + monument.getHealth());
+                        }
+                        golemTimer++;
+                    }
+                }
+
+                if (monument.getHealth() <= 0) {
+                    this.stop();
+                    endGame(primaryStage);
+                }
+            }
+        };
+        loop.start();
+    }
+
     public void startRound() {
         round++;
         displayRound.setText("Round: " + round);
@@ -434,34 +589,326 @@ public class Main extends Application {
         }
     }
 
-    public void archerAttack() {
-        for (int i = 0; i < archerArray.size(); i++) {
-            for (int j = 0; j < goblinArray.size(); j++) {
-                if (Math.abs(archerArray.get(i).getX() - goblinArray.get(i).getX()) < 250
-                        && Math.abs(archerArray.get(i).getY() - goblinArray.get(i).getY()) < 250) {
+    public void archerGoblinAttack(int i, int j) {
+        if (goblinArray.get(j).getHealth() > 0) {
+            Arrow arrow = new Arrow();
+            arrow.setX(archerArray.get(i).getX());
+            arrow.setY(archerArray.get(i).getY());
+            arrow.setDx((goblinArray.get(j).getX() - archerArray.get(i).getX()) / 10);
+            arrow.setDy((goblinArray.get(j).getY() - archerArray.get(i).getY()) / 10);
 
-                    Bullet bullet = new Bullet();
-                    bullet.setX(archerArray.get(i).getX());
-                    bullet.setY(archerArray.get(i).getY());
-                    bullet.setDx(5);
-                    bullet.setDy(5);
+            arrowArray.add(arrow);
+            root.getChildren().addAll(arrow.getImageView());
 
-                    bulletArray.add(bullet);
-                    root.getChildren().addAll(bullet.getImageView());
-
-                    goblinArray.get(i).setHealth(goblinArray.get(i).getHealth() - archerArray.get(i).getAttack());
-
-                    if (goblinArray.get(i).getHealth() <= 0) {
-                        root.getChildren().remove(goblinArray.get(i).getImageView());
-                        root.getChildren().remove(goblinArray.get(i).getImageView());
-                        player.setMoney(player.getMoney() + 25);
-                        displayMoney.setText("$" + player.getMoney());
-                        numOfEnemiesKilled++;
-                    }
-                }
-            }
+            goblinArray.get(j).setHealth(goblinArray.get(j).getHealth() - archerArray.get(i).getAttack());
+        } else {
+            root.getChildren().remove(goblinArray.get(j).getImageView());
+            root.getChildren().remove(goblinArray.get(j).getImageView());
+            goblinArray.remove(j);
+            player.setMoney(player.getMoney() + 25);
+            displayMoney.setText("$" + player.getMoney());
+            numOfEnemiesKilled++;
         }
     }
+    public void archerBarbAttack(int i, int j) {
+        if (barbarianArray.get(j).getHealth() > 0) {
+            Arrow arrow = new Arrow();
+            arrow.setX(archerArray.get(i).getX());
+            arrow.setY(archerArray.get(i).getY());
+            arrow.setDx((barbarianArray.get(j).getX() - archerArray.get(i).getX()) / 10);
+            arrow.setDy((barbarianArray.get(j).getY() - archerArray.get(i).getY()) / 10);
+
+            arrowArray.add(arrow);
+            root.getChildren().addAll(arrow.getImageView());
+
+            barbarianArray.get(j).setHealth(barbarianArray.get(j).getHealth() - archerArray.get(i).getAttack());
+        } else {
+            root.getChildren().remove(barbarianArray.get(j).getImageView());
+            root.getChildren().remove(barbarianArray.get(j).getImageView());
+            barbarianArray.remove(j);
+            player.setMoney(player.getMoney() + 50);
+            displayMoney.setText("$" + player.getMoney());
+            numOfEnemiesKilled++;
+        }
+    }
+    public void archerGolemAttack(int i, int j) {
+        if (golemArray.get(j).getHealth() > 0) {
+            Arrow arrow = new Arrow();
+            arrow.setX(archerArray.get(i).getX());
+            arrow.setY(archerArray.get(i).getY());
+            arrow.setDx((golemArray.get(j).getX() - archerArray.get(i).getX()) / 10);
+            arrow.setDy((golemArray.get(j).getY() - archerArray.get(i).getY()) / 10);
+
+            arrowArray.add(arrow);
+            root.getChildren().addAll(arrow.getImageView());
+
+            golemArray.get(j).setHealth(golemArray.get(j).getHealth() - archerArray.get(i).getAttack());
+        } else {
+            root.getChildren().remove(golemArray.get(j).getImageView());
+            root.getChildren().remove(golemArray.get(j).getImageView());
+            golemArray.remove(j);
+            player.setMoney(player.getMoney() + 100);
+            displayMoney.setText("$" + player.getMoney());
+            numOfEnemiesKilled++;
+        }
+    }
+
+    public void cannonGoblinAttack(int i, int j) {
+        if (goblinArray.get(j).getHealth() > 0) {
+            CannonBall cannonBall = new CannonBall();
+            cannonBall.setX(cannonArray.get(i).getX());
+            cannonBall.setY(cannonArray.get(i).getY());
+            cannonBall.setDx((goblinArray.get(j).getX() - cannonArray.get(i).getX()) / 10);
+            cannonBall.setDy((goblinArray.get(j).getY() - cannonArray.get(i).getY()) / 10);
+
+            cannonBallArray.add(cannonBall);
+            root.getChildren().addAll(cannonBall.getImageView());
+
+            goblinArray.get(j).setHealth(goblinArray.get(j).getHealth() - cannonArray.get(i).getAttack());
+        } else {
+            root.getChildren().remove(goblinArray.get(j).getImageView());
+            root.getChildren().remove(goblinArray.get(j).getImageView());
+            goblinArray.remove(j);
+            player.setMoney(player.getMoney() + 25);
+            displayMoney.setText("$" + player.getMoney());
+            numOfEnemiesKilled++;
+        }
+    }
+    public void cannonBarbAttack(int i, int j) {
+        if (barbarianArray.get(j).getHealth() > 0) {
+            CannonBall cannonBall = new CannonBall();
+            cannonBall.setX(cannonArray.get(i).getX());
+            cannonBall.setY(cannonArray.get(i).getY());
+            cannonBall.setDx((barbarianArray.get(j).getX() - cannonArray.get(i).getX()) / 10);
+            cannonBall.setDy((barbarianArray.get(j).getY() - cannonArray.get(i).getY()) / 10);
+
+            cannonBallArray.add(cannonBall);
+            root.getChildren().addAll(cannonBall.getImageView());
+
+            barbarianArray.get(j).setHealth(barbarianArray.get(j).getHealth() - cannonArray.get(i).getAttack());
+        } else {
+            root.getChildren().remove(barbarianArray.get(j).getImageView());
+            root.getChildren().remove(barbarianArray.get(j).getImageView());
+            barbarianArray.remove(j);
+            player.setMoney(player.getMoney() + 50);
+            displayMoney.setText("$" + player.getMoney());
+            numOfEnemiesKilled++;
+        }
+    }
+    public void cannonGolemAttack(int i, int j) {
+        if (golemArray.get(j).getHealth() > 0) {
+            CannonBall cannonBall = new CannonBall();
+            cannonBall.setX(cannonArray.get(i).getX());
+            cannonBall.setY(cannonArray.get(i).getY());
+            cannonBall.setDx((golemArray.get(j).getX() - cannonArray.get(i).getX()) / 10);
+            cannonBall.setDy((golemArray.get(j).getY() - cannonArray.get(i).getY()) / 10);
+
+            cannonBallArray.add(cannonBall);
+            root.getChildren().addAll(cannonBall.getImageView());
+
+            golemArray.get(j).setHealth(golemArray.get(j).getHealth() - cannonArray.get(i).getAttack());
+        } else {
+            root.getChildren().remove(golemArray.get(j).getImageView());
+            root.getChildren().remove(golemArray.get(j).getImageView());
+            golemArray.remove(j);
+            player.setMoney(player.getMoney() + 100);
+            displayMoney.setText("$" + player.getMoney());
+            numOfEnemiesKilled++;
+        }
+    }
+
+    public void infernoTowerGoblinAttack(int i, int j) {
+        if (goblinArray.get(j).getHealth() > 0) {
+            Fireball fireball = new Fireball();
+            fireball.setX(infernoTowerArray.get(i).getX());
+            fireball.setY(infernoTowerArray.get(i).getY());
+            fireball.setDx((goblinArray.get(j).getX() - infernoTowerArray.get(i).getX()) / 10);
+            fireball.setDy((goblinArray.get(j).getY() - infernoTowerArray.get(i).getY()) / 10);
+
+            fireballArray.add(fireball);
+            root.getChildren().addAll(fireball.getImageView());
+
+            goblinArray.get(j).setHealth(goblinArray.get(j).getHealth() - infernoTowerArray.get(i).getAttack());
+        } else {
+            root.getChildren().remove(goblinArray.get(j).getImageView());
+            root.getChildren().remove(goblinArray.get(j).getImageView());
+            goblinArray.remove(j);
+            player.setMoney(player.getMoney() + 25);
+            displayMoney.setText("$" + player.getMoney());
+            numOfEnemiesKilled++;
+        }
+    }
+    public void infernoTowerBarbAttack(int i, int j) {
+        if (barbarianArray.get(j).getHealth() > 0) {
+            Fireball fireball = new Fireball();
+            fireball.setX(infernoTowerArray.get(i).getX());
+            fireball.setY(infernoTowerArray.get(i).getY());
+            fireball.setDx((barbarianArray.get(j).getX() - infernoTowerArray.get(i).getX()) / 10);
+            fireball.setDy((barbarianArray.get(j).getY() - infernoTowerArray.get(i).getY()) / 10);
+
+            fireballArray.add(fireball);
+            root.getChildren().addAll(fireball.getImageView());
+
+            barbarianArray.get(j).setHealth(barbarianArray.get(j).getHealth() - infernoTowerArray.get(i).getAttack());
+        } else {
+            root.getChildren().remove(barbarianArray.get(j).getImageView());
+            root.getChildren().remove(barbarianArray.get(j).getImageView());
+            barbarianArray.remove(j);
+            player.setMoney(player.getMoney() + 50);
+            displayMoney.setText("$" + player.getMoney());
+            numOfEnemiesKilled++;
+        }
+    }
+    public void infernoTowerGolemAttack(int i, int j) {
+        if (golemArray.get(j).getHealth() > 0) {
+            Fireball fireball = new Fireball();
+            fireball.setX(infernoTowerArray.get(i).getX());
+            fireball.setY(infernoTowerArray.get(i).getY());
+            fireball.setDx((golemArray.get(j).getX() - infernoTowerArray.get(i).getX()) / 10);
+            fireball.setDy((golemArray.get(j).getY() - infernoTowerArray.get(i).getY()) / 10);
+
+            fireballArray.add(fireball);
+            root.getChildren().addAll(fireball.getImageView());
+
+            golemArray.get(j).setHealth(golemArray.get(j).getHealth() - infernoTowerArray.get(i).getAttack());
+        } else {
+            root.getChildren().remove(golemArray.get(j).getImageView());
+            root.getChildren().remove(golemArray.get(j).getImageView());
+            golemArray.remove(j);
+            player.setMoney(player.getMoney() + 100);
+            displayMoney.setText("$" + player.getMoney());
+            numOfEnemiesKilled++;
+        }
+    }
+
+    public void mortarGoblinAttack(int i, int j) {
+        if (goblinArray.get(j).getHealth() > 0) {
+            MortarShot mortarShot = new MortarShot();
+            mortarShot.setX(mortarArray.get(i).getX());
+            mortarShot.setY(mortarArray.get(i).getY());
+            mortarShot.setDx((goblinArray.get(j).getX() - mortarArray.get(i).getX()) / 10);
+            mortarShot.setDy((goblinArray.get(j).getY() - mortarArray.get(i).getY()) / 10);
+
+            mortarShotArray.add(mortarShot);
+            root.getChildren().addAll(mortarShot.getImageView());
+
+            goblinArray.get(j).setHealth(goblinArray.get(j).getHealth() - mortarArray.get(i).getAttack());
+        } else {
+            root.getChildren().remove(goblinArray.get(j).getImageView());
+            root.getChildren().remove(goblinArray.get(j).getImageView());
+            goblinArray.remove(j);
+            player.setMoney(player.getMoney() + 25);
+            displayMoney.setText("$" + player.getMoney());
+            numOfEnemiesKilled++;
+        }
+    }
+    public void mortarBarbAttack(int i, int j) {
+        if (barbarianArray.get(j).getHealth() > 0) {
+            MortarShot mortarShot = new MortarShot();
+            mortarShot.setX(mortarArray.get(i).getX());
+            mortarShot.setY(mortarArray.get(i).getY());
+            mortarShot.setDx((barbarianArray.get(j).getX() - mortarArray.get(i).getX()) / 10);
+            mortarShot.setDy((barbarianArray.get(j).getY() - mortarArray.get(i).getY()) / 10);
+
+            mortarShotArray.add(mortarShot);
+            root.getChildren().addAll(mortarShot.getImageView());
+
+            barbarianArray.get(j).setHealth(barbarianArray.get(j).getHealth() - mortarArray.get(i).getAttack());
+        } else {
+            root.getChildren().remove(barbarianArray.get(j).getImageView());
+            root.getChildren().remove(barbarianArray.get(j).getImageView());
+            barbarianArray.remove(j);
+            player.setMoney(player.getMoney() + 50);
+            displayMoney.setText("$" + player.getMoney());
+            numOfEnemiesKilled++;
+        }
+    }
+    public void mortarGolemAttack(int i, int j) {
+        if (golemArray.get(j).getHealth() > 0) {
+            MortarShot mortarShot = new MortarShot();
+            mortarShot.setX(mortarArray.get(i).getX());
+            mortarShot.setY(mortarArray.get(i).getY());
+            mortarShot.setDx((golemArray.get(j).getX() - mortarArray.get(i).getX()) / 10);
+            mortarShot.setDy((golemArray.get(j).getY() - mortarArray.get(i).getY()) / 10);
+
+            mortarShotArray.add(mortarShot);
+            root.getChildren().addAll(mortarShot.getImageView());
+
+            golemArray.get(j).setHealth(golemArray.get(j).getHealth() - mortarArray.get(i).getAttack());
+        } else {
+            root.getChildren().remove(golemArray.get(j).getImageView());
+            root.getChildren().remove(golemArray.get(j).getImageView());
+            golemArray.remove(j);
+            player.setMoney(player.getMoney() + 100);
+            displayMoney.setText("$" + player.getMoney());
+            numOfEnemiesKilled++;
+        }
+    }
+
+    public void wizardTowerGoblinAttack(int i, int j) {
+        if (goblinArray.get(j).getHealth() > 0) {
+            PurpleFireball purpleFireball = new PurpleFireball();
+            purpleFireball.setX(wizardTowerArray.get(i).getX());
+            purpleFireball.setY(wizardTowerArray.get(i).getY());
+            purpleFireball.setDx((goblinArray.get(j).getX() - wizardTowerArray.get(i).getX()) / 30);
+            purpleFireball.setDy((goblinArray.get(j).getY() - wizardTowerArray.get(i).getY()) / 30);
+
+            purpleFireballArray.add(purpleFireball);
+            root.getChildren().addAll(purpleFireball.getImageView());
+
+            goblinArray.get(j).setHealth(goblinArray.get(j).getHealth() - wizardTowerArray.get(i).getAttack());
+        } else {
+            root.getChildren().remove(goblinArray.get(j).getImageView());
+            root.getChildren().remove(goblinArray.get(j).getImageView());
+            goblinArray.remove(j);
+            player.setMoney(player.getMoney() + 25);
+            displayMoney.setText("$" + player.getMoney());
+            numOfEnemiesKilled++;
+        }
+    }
+    public void wizardTowerBarbAttack(int i, int j) {
+        if (barbarianArray.get(j).getHealth() > 0) {
+            PurpleFireball purpleFireball = new PurpleFireball();
+            purpleFireball.setX(wizardTowerArray.get(i).getX());
+            purpleFireball.setY(wizardTowerArray.get(i).getY());
+            purpleFireball.setDx((barbarianArray.get(j).getX() - wizardTowerArray.get(i).getX()) / 30);
+            purpleFireball.setDy((barbarianArray.get(j).getY() - wizardTowerArray.get(i).getY()) / 30);
+
+            purpleFireballArray.add(purpleFireball);
+            root.getChildren().addAll(purpleFireball.getImageView());
+
+            barbarianArray.get(j).setHealth(barbarianArray.get(j).getHealth() - wizardTowerArray.get(i).getAttack());
+        } else {
+            root.getChildren().remove(barbarianArray.get(j).getImageView());
+            root.getChildren().remove(barbarianArray.get(j).getImageView());
+            barbarianArray.remove(j);
+            player.setMoney(player.getMoney() + 50);
+            displayMoney.setText("$" + player.getMoney());
+            numOfEnemiesKilled++;
+        }
+    }
+    public void wizardTowerGolemAttack(int i, int j) {
+        if (golemArray.get(j).getHealth() > 0) {
+            PurpleFireball purpleFireball = new PurpleFireball();
+            purpleFireball.setX(wizardTowerArray.get(i).getX());
+            purpleFireball.setY(wizardTowerArray.get(i).getY());
+            purpleFireball.setDx((golemArray.get(j).getX() - wizardTowerArray.get(i).getX()) / 30);
+            purpleFireball.setDy((golemArray.get(j).getY() - wizardTowerArray.get(i).getY()) / 30);
+
+            purpleFireballArray.add(purpleFireball);
+            root.getChildren().addAll(purpleFireball.getImageView());
+
+            golemArray.get(j).setHealth(golemArray.get(j).getHealth() - wizardTowerArray.get(i).getAttack());
+        } else {
+            root.getChildren().remove(golemArray.get(j).getImageView());
+            root.getChildren().remove(golemArray.get(j).getImageView());
+            golemArray.remove(j);
+            player.setMoney(player.getMoney() + 100);
+            displayMoney.setText("$" + player.getMoney());
+            numOfEnemiesKilled++;
+        }
+    }
+
     public void buyArcherTower(ArcherTower baseArcherTower) {
         if (player.getMoney() >= (baseArcherTower.getCost() + player.getTowerMultiplier())) {
             root.setOnMouseClicked(new EventHandler<MouseEvent>() {
