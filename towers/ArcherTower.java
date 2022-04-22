@@ -17,7 +17,7 @@ public class ArcherTower {
         this.attack = 10;
         this.cost = 400;
         this.speed = 30;
-        this.range = 250;
+        this.range = 200;
 
         this.x = x;
         this.y = y;
